@@ -1,6 +1,6 @@
 package com.github.formlabel.dao;
 
-import com.github.formlabel.annotation.ConfigGroup;
+import com.github.formlabel.annotation.FormGroup;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +19,7 @@ public class ConfigForm implements BaseConfig {
 
     private String key;
 
-    @ConfigGroup(label = "配置")
+    @FormGroup(label = "配置")
     private InsideConfig insideConfig;
 
 

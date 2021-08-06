@@ -1,8 +1,8 @@
 package com.github.formlabel.resolver;
 
 
-import com.github.formlabel.annotation.ConfigFormField;
-import com.github.formlabel.annotation.ConfigGroup;
+import com.github.formlabel.annotation.FormField;
+import com.github.formlabel.annotation.FormGroup;
 import com.github.formlabel.annotation.Rule;
 import com.github.formlabel.dao.BaseConfig;
 import com.github.formlabel.data.FormFieldInfo;
@@ -41,12 +41,12 @@ public class FormResolver {
         Field[] fields = ob.getClass().getDeclaredFields();
         for(Field field : fields) {
             field.setAccessible(true);
-            ConfigGroup configGroup = field.getAnnotation(ConfigGroup.class);
-            ConfigFormField configFormField = field.getAnnotation(ConfigFormField.class);
+            FormGroup formGroup = field.getAnnotation(FormGroup.class);
+            FormField formField = field.getAnnotation(FormField.class);
             // configGroup不为空 说明该属性是复杂对象 递归解析
-            if (configGroup != null) {
+            if (formGroup != null) {
                 Map<String,Object> inside = new LinkedHashMap<>();
-                inside.put(FormFieldInfo.LABEL,configGroup.label());
+                inside.put(FormFieldInfo.LABEL, formGroup.label());
                 List<Map<String,Object>> list = (List<Map<String, Object>>) data.getOrDefault("list",new LinkedList<>());
                 list.add(inside);
                 data.put("list",list);
@@ -55,26 +55,26 @@ public class FormResolver {
                 }
                 // 递归
                 dealFields(inside,field.get(ob));
-            } else if (configFormField != null) {
-                resolveField(data,field, configFormField,ob);
+            } else if (formField != null) {
+                resolveField(data,field, formField,ob);
             }
         }
     }
 
     // 解析包装基本类型属性
-    private static void resolveField(Map<String,Object> data, Field field, ConfigFormField configFormField, Object ob) throws IllegalAccessException {
+    private static void resolveField(Map<String,Object> data, Field field, FormField formField, Object ob) throws IllegalAccessException {
         // 获取字段分组
         data.put("groupName",ob.getClass().getSimpleName());
         List<Map<String,Object>> list = (List<Map<String, Object>>) data.getOrDefault("list",new LinkedList<>());
         // 根据注解构造 FieldInfo 对象
         Map<String,Object> fieldInfo = new LinkedHashMap<>();
         // 填充属性值
-        fieldInfo.put(FormFieldInfo.LABEL, configFormField.label());
-        fieldInfo.put(FormFieldInfo.TYPE, configFormField.type().getValue());
+        fieldInfo.put(FormFieldInfo.LABEL, formField.label());
+        fieldInfo.put(FormFieldInfo.TYPE, formField.type().getValue());
         fieldInfo.put(FormFieldInfo.VALUE,field.get(ob));
         fieldInfo.put(FormFieldInfo.NAME,field.getName());
         // 填充 options
-        String[] options = configFormField.options();
+        String[] options = formField.options();
         List<Option> optionList = new ArrayList<>(options.length);
         int value  = 0;
         for (String optionValue : options) {
@@ -121,16 +121,16 @@ public class FormResolver {
         try {
             for(Field field:fields) {
                 field.setAccessible(true);
-                ConfigGroup configGroup = field.getAnnotation(ConfigGroup.class);
-                ConfigFormField configFormField = field.getAnnotation(ConfigFormField.class);
-                if (configGroup != null) {
+                FormGroup formGroup = field.getAnnotation(FormGroup.class);
+                FormField formField = field.getAnnotation(FormField.class);
+                if (formGroup != null) {
                     field.set(ob,field.getType().getConstructor().newInstance());
                     for(Map<String,Object> map : list) {
                         if (field.getType().getSimpleName().equals(map.get("groupName"))) {
                             parseFields((List<Map<String, Object>>) map.get("list"),field.get(ob));
                         }
                     }
-                } else if (configFormField != null) {
+                } else if (formField != null) {
                     // 根据注解构造 FormFieldInfo 对象
                     for(Map<String,Object> map : list) {
                         if (field.getName().equals(map.get(FormFieldInfo.NAME))) {
